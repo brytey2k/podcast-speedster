@@ -46,7 +46,7 @@ class CachePodcastContent extends Command
                 return;
             }
 
-            PodcastCache::create([
+            PodcastCache::query()->create([
                 'content' => $response->body(),
             ]);
 

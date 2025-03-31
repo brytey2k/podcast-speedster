@@ -43,7 +43,7 @@ class RemoveTenant extends Command
             return;
         }
 
-        $tenant = Tenant::find($id);
+        $tenant = Tenant::query()->find($id);
         if (! $tenant) {
             $this->error('Tenant does not exist');
 

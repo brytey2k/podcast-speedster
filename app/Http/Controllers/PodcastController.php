@@ -10,6 +10,6 @@ class PodcastController extends Controller
 {
     public function __invoke(): string
     {
-        return PodcastCache::latest()->first()->content;
+        return PodcastCache::query()->latest()->first()->content;
     }
 }

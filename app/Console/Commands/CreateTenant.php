@@ -62,13 +62,13 @@ class CreateTenant extends Command
             return;
         }
 
-        if (Tenant::where('id', '=', $id)->exists()) {
+        if (Tenant::query()->where('id', '=', $id)->exists()) {
             $this->error('Another tenant with this id already exists');
 
             return;
         }
 
-        $tenant = Tenant::create([
+        $tenant = Tenant::query()->create([
             'id' => $id,
             'api_key' => '',
             'sender_id' => $id,

@@ -60,12 +60,15 @@
         "phpstan": [
             "vendor/bin/phpstan analyse --memory-limit=512M"
         ],
-        "pint": [
+        "pint-test": [
+            "vendor/bin/pint --test"
+        ],
+        "pint-fix": [
             "vendor/bin/pint -v"
         ],
         "ide-helper": [
             "@php artisan tenancy:ide-helper",
-            "@composer pint app/Models"
+            "@composer pint-fix app/Models"
         ]
     },
     "extra": {

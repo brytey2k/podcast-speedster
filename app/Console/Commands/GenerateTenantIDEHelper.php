@@ -29,7 +29,7 @@ class GenerateTenantIDEHelper extends Command
      */
     public function handle(): void
     {
-        $tenant = Tenant::first();
+        $tenant = Tenant::query()->first();
         if (!$tenant) {
             $this->info('No tenants found. Exiting.');
             return;
