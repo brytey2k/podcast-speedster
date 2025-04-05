@@ -36,7 +36,7 @@ class PruneStaleCachedPodcastContent extends Command
         $this->getTenants()->each(function ($tenant) {
             $this->info('Pruning stale cached podcast content for: ' . $tenant->id);
 
-            if (PodcastCache::query()->count()) {
+            if (PodcastCache::query()->count() === 1) {
                 $this->info(sprintf('Only one entry found for tenant %s Skipping', $tenant->id));
                 return;
             }
