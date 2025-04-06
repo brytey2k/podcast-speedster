@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\PodcastCache;
+use App\Helpers\Traits\SendsConsoleOutputToLogs;
+use App\Jobs\CachePodcastContentJob;
+use App\Models\Tenant;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Stancl\Tenancy\Concerns\HasATenantsOption;
 use Stancl\Tenancy\Concerns\TenantAwareCommand;
 
@@ -14,6 +16,7 @@ class CachePodcastContent extends Command
 {
     use TenantAwareCommand;
     use HasATenantsOption;
+    use SendsConsoleOutputToLogs;
 
     /**
      * The name and signature of the console command.
@@ -34,23 +37,14 @@ class CachePodcastContent extends Command
      */
     public function handle(): void
     {
-        $this->getTenants()->each(function ($tenant) {
-            $this->info('Caching podcast content...' . $tenant->id);
+        $self = $this;
+        $this->getTenants()->each(static function (Tenant $tenant) use ($self) {
+            Log::withContext(['tenant' => $tenant->id]);
+            $self->infoConsoleOutputAndLog(sprintf('Dispatching CachePodcastContentJob for tenant: %s', $tenant->id));
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Basic ' . $tenant->basic_auth_string,
-            ])->get($tenant->podcast_url);
+            dispatch(new CachePodcastContentJob($tenant));
 
-            if ($response->failed()) {
-                $this->error('Failed to fetch podcast content for tenant: ' . $tenant->id);
-                return;
-            }
-
-            PodcastCache::query()->create([
-                'content' => $response->body(),
-            ]);
-
-            $this->info('Podcast content cached successfully.');
+            $self->infoConsoleOutputAndLog(sprintf('CachePodcastContentJob dispatched for tenant: %s', $tenant->id));
         });
     }
 }

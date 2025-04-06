@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\PodcastCache;
+use App\Helpers\Traits\SendsConsoleOutputToLogs;
+use App\Jobs\PruneStaleCachedPodcastContentJob;
+use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Stancl\Tenancy\Concerns\HasATenantsOption;
 use Stancl\Tenancy\Concerns\TenantAwareCommand;
 
@@ -13,6 +16,7 @@ class PruneStaleCachedPodcastContent extends Command
 {
     use TenantAwareCommand;
     use HasATenantsOption;
+    use SendsConsoleOutputToLogs;
 
     /**
      * The name and signature of the console command.
@@ -33,24 +37,14 @@ class PruneStaleCachedPodcastContent extends Command
      */
     public function handle(): void
     {
-        $this->getTenants()->each(function ($tenant) {
-            $this->info('Pruning stale cached podcast content for: ' . $tenant->id);
+        $self = $this;
+        $this->getTenants()->each(static function (Tenant $tenant) use ($self) {
+            Log::withContext(['tenant' => $tenant->id]);
+            $self->infoConsoleOutputAndLog(sprintf('Dispatching PruneStaleCachedPodcastContentJob for tenant: %s', $tenant->id));
 
-            if (PodcastCache::query()->count() === 1) {
-                $this->info(sprintf('Only one entry found for tenant %s Skipping', $tenant->id));
-                return;
-            }
+            dispatch(new PruneStaleCachedPodcastContentJob($tenant));
 
-            $latestEntry = PodcastCache::query()->latest()->limit(1)->first();
-            if ($latestEntry === null) {
-                $this->error(sprintf('No cached podcast content found for tenant: %s', $tenant->id));
-                return;
-            }
-
-            $this->info(sprintf('Deleting stale cached podcast content for: %s', $tenant->id));
-            PodcastCache::query()->where('id', '<>', $latestEntry->id)->delete();
-
-            $this->info('Stale podcast content pruned successfully.');
+            $self->infoConsoleOutputAndLog(sprintf('Stale podcast content pruned successfully for tenant: %s', $tenant->id));
         });
     }
 }
