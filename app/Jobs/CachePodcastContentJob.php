@@ -21,6 +21,9 @@ class CachePodcastContentJob implements ShouldQueue
 
     public function handle(PodcastCacheRepository $podcastCacheRepository): void
     {
+        tenancy()->initialize($this->tenant);
+        $podcastCacheRepository->addPodcastCache('testing');
+
         Log::withContext(['tenant' => $this->tenant->id]);
         Log::info(sprintf('Caching podcast content for tenant: %s', $this->tenant->id));
 
@@ -55,5 +58,6 @@ class CachePodcastContentJob implements ShouldQueue
         $podcastCacheRepository->addPodcastCache($response->body());
 
         Log::info(sprintf('Podcast content cached successfully for tenant: %s', $this->tenant->id));
+        tenancy()->end();
     }
 }

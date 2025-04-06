@@ -20,6 +20,7 @@ class PruneStaleCachedPodcastContentJob implements ShouldQueue
 
     public function handle(PodcastCacheRepository $podcastCacheRepository): void
     {
+        tenancy()->initialize($this->tenant);
         Log::withContext(['tenant' => $this->tenant->id]);
         Log::info(sprintf('Pruning stale cached podcast content for: %s', $this->tenant->id));
 
@@ -38,5 +39,6 @@ class PruneStaleCachedPodcastContentJob implements ShouldQueue
         $podcastCacheRepository->removeStalePodcastCache($latestEntry);
 
         Log::info('Stale podcast content pruned successfully.');
+        tenancy()->end();
     }
 }
