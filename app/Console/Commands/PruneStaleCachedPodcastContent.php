@@ -10,11 +10,9 @@ use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Stancl\Tenancy\Concerns\HasATenantsOption;
-use Stancl\Tenancy\Concerns\TenantAwareCommand;
 
 class PruneStaleCachedPodcastContent extends Command
 {
-    use TenantAwareCommand;
     use HasATenantsOption;
     use SendsConsoleOutputToLogs;
 
