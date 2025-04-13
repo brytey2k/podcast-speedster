@@ -33,4 +33,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase;
     use HasDomains;
+
+    public function requiresAuth(): bool
+    {
+        return $this->requires_auth ?? true;
+    }
 }

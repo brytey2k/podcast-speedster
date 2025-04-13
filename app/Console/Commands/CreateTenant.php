@@ -27,6 +27,7 @@ class CreateTenant extends Command
     protected function configure(): void
     {
         $this->addOption('id', null, InputOption::VALUE_REQUIRED, 'String to use as id and subdomain for tenant');
+        $this->addOption('requires_auth', null, InputOption::VALUE_REQUIRED, 'Whether the podcast requires authentication');
         $this->addOption('name', null, InputOption::VALUE_REQUIRED, 'Tenant name');
         $this->addOption('podcast_username', null, InputOption::VALUE_OPTIONAL, 'Podcast username');
         $this->addOption('podcast_password', null, InputOption::VALUE_OPTIONAL, 'Podcast password');
@@ -43,6 +44,7 @@ class CreateTenant extends Command
         $username = $this->option('podcast_username');
         $password = $this->option('podcast_password');
         $podcastUrl = $this->option('podcast_url');
+        $requiresAuth = $this->option('requires_auth');
 
         if (! $id) {
             $this->error('An ID needs to be specified. Pass this by using the --id option');
@@ -55,6 +57,14 @@ class CreateTenant extends Command
 
             return;
         }
+
+        if ($requiresAuth !== 'true' && $requiresAuth !== 'false') {
+            $this->error('The requires_auth option must be either true or false');
+
+            return;
+        }
+
+        $requiresAuth = $requiresAuth === 'true';
 
         if (! $podcastUrl) {
             $this->error('A podcast URL needs to be specified. Pass this by using the --podcast_url option');
@@ -77,6 +87,7 @@ class CreateTenant extends Command
                 sprintf('%s:%s', $username, $password)
             ),
             'podcast_url' => $podcastUrl,
+            'requires_auth' => $requiresAuth,
         ]);
         $tenant->domains()->create(['domain' => "$id." . parse_url(config('app.url'), PHP_URL_HOST)]);
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\PodcastController;
+use App\Http\Middleware\TenantPodcastAuth;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -24,8 +25,7 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(static function () {
-    Route::middleware('guest')->group(static function () {
+    Route::middleware(TenantPodcastAuth::class)->group(static function () {
         Route::get('/', PodcastController::class);
     });
-
 });
