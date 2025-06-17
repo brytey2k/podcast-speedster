@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Repositories\PodcastCacheRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -26,9 +27,21 @@ class CachePodcastContentJob implements ShouldQueue
         Log::withContext(['tenant' => $this->tenant->id]);
         Log::info(sprintf('Caching podcast content for tenant: %s', $this->tenant->id));
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . $this->tenant->basic_auth_string,
-        ])->get($this->tenant->podcast_url);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Basic ' . $this->tenant->basic_auth_string,
+            ])->get($this->tenant->podcast_url);
+        } catch (ConnectionException $e) {
+            Log::error(sprintf('Connection error while fetching podcast content for tenant: %s', $this->tenant->id), [
+                'error' => $e->getMessage(),
+            ]);
+            return;
+        } catch (\Exception $e) {
+            Log::error(sprintf('Unexpected error while fetching podcast content for tenant: %s', $this->tenant->id), [
+                'error' => $e->getMessage(),
+            ]);
+            return;
+        }
 
         if ($response->failed()) {
             Log::info(sprintf('Failed to fetch podcast content for tenant: %s', $this->tenant->id), [
